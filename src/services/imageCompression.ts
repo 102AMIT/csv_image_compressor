@@ -23,11 +23,15 @@ export const compressImage = async (imageDocument: any) => {
 
     const outputUrls: string[] = [];
     for (const url of imageDocument.inputUrls) {
+        console.log(`Processing image from URL: ${url}`);
         try {
             const compressedImageBuffer = await downloadAndCompressImage(url);
+            console.log(`Image downloaded and compressed successfully for URL: ${url}`);
+
             const s3Url = await uploadToS3(imageDocument.requestId, compressedImageBuffer);
+            console.log(`Image uploaded to S3: ${s3Url}`);
             outputUrls.push(s3Url);
-        } catch (err : any) {
+        } catch (err: any) {
             console.error(`Error processing image ${url}: ${err.message}`);
             return { requestId: imageDocument.requestId, errors: [`Failed to process ${url}: ${err.message}`] };
         }
@@ -40,6 +44,7 @@ export const compressImage = async (imageDocument: any) => {
     console.log(`All images processed for request ID: ${imageDocument.requestId}`);
     return { requestId: imageDocument.requestId, errors: [] };
 };
+
 
 const downloadAndCompressImage = async (url: string) => {
     const response = await axios.get(url, { responseType: 'arraybuffer' });
