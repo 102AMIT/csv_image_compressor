@@ -61,17 +61,24 @@ const downloadAndCompressImage = async (url: string) => {
 
 const uploadToS3 = async (requestId: string, imageBuffer: Buffer) => {
     const outputFileName = `${requestId}-${Date.now()}.jpg`;
-    const s3Result = await s3.upload({
-        Bucket: process.env.S3_BUCKET || '',
-        Key: `compressed_images/${outputFileName}`,
-        Body: imageBuffer,
-        ACL: 'public-read',
-        ContentType: 'image/jpeg',
-    }).promise();
+    
+    try {
+        const s3Result = await s3.upload({
+            Bucket: process.env.S3_BUCKET || '',
+            Key: `compressed_images/${outputFileName}`,
+            Body: imageBuffer,
+            ACL: 'public-read',
+            ContentType: 'image/jpeg',
+        }).promise();
 
-    if (!s3Result.Location) {
-        throw new Error('Failed to obtain S3 URL after upload');
+        if (!s3Result.Location) {
+            throw new Error('Failed to obtain S3 URL after upload');
+        }
+
+        return s3Result.Location;
+    } catch (error:any) {
+        console.error('Error uploading to S3:', error.message);
+        throw new Error(`S3 upload failed: ${error.message}`);
     }
-
-    return s3Result.Location;
 };
+
